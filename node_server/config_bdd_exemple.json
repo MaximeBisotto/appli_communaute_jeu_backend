@@ -1,0 +1,7 @@
+{
+	"host": "l'IP ou l'URL",
+	"user": "l'utilisateur",
+	"database": "la base de données",
+	"password": "le mot de passe",
+	"port": "le port"
+}

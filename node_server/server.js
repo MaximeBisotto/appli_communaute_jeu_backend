@@ -5,14 +5,18 @@ const sha1 = require('sha1');
 //const session = require('express-session');
 const crypto = require('crypto');
 
-const client = new Client.Pool({
+var config_bdd = require('./config_bdd.json')
+
+const client = new Client.Pool(config_bdd);
+/*const client = new Client.Pool({
 	user: 'postgres',
 	host: '172.17.0.1',
 	// host: 'localhost',
 	database: 'jeu',
 	password: 'mdp',
 	port: 5432,
-});
+});*/
+
 
 /*app.use(session({// charge le middleware express-session dans la pile
  	secret: 'ma phrase secrete',
@@ -21,6 +25,82 @@ const client = new Client.Pool({
 	store : express.session.MemoryStore,
 	cookie : {maxAge : 24 * 3600 * 1000}
 }));*/
+
+function getIdUser(token) {
+	let idUser;
+	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
+	.then((res) => {
+		idUser = res[0][0];
+	})
+	.catch((err) => {
+		// TODO throws a error
+		console.log("erreur lors de la connexion");
+		console.log(err);
+		idUser=null;
+      	});
+      	return idUser;	
+}
+
+/*function insertNewToken(idUser) {
+	var token;
+	client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
+	.then((res) => {
+		console.log(res);
+		var token = res.rows[0].token;
+		console.log("token: " + token);	
+		if (token == undefined || token == null) {
+			token = crypto.randomBytes(64).toString('hex');
+			console.log("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());");
+			client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+			.then((res) => {
+				//return token;
+			})
+			.catch((err) => {
+				console.log("erreur token");
+				console.log(err);
+			});
+		}
+		//response.json(token);
+		console.log("fin fonction: " + token);
+		return token;
+	})
+	.catch((err) => {
+		console.log("erreur token");
+		console.log(err);
+	});
+	
+	//response.json(token);
+	//return token;
+	//return token;
+
+
+
+	var token = crypto.randomBytes(64).toString('hex');
+	console.log("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());");
+	client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+	.then((res) => {
+		console.log("fghjkjhgfgh");
+		return token;
+	})
+	.catch((err) => {
+		// TODO il faudrait ignorer l'exception qui est tout à fait normale si l'utilisateur est déjà inscrit
+		client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
+		.then((res) => {
+			console.log("success");
+			return res.rows[0].token;
+		})
+		.catch((err) => {
+			console.log("erreur token");
+			console.log(err);
+		});
+		if (err.code != '23505') {
+			console.log("error insert token bdd");
+			console.log(err);
+		}
+	});
+	//return token;
+}*/
+
 
 /**
  *	Requête GET /login 
@@ -39,18 +119,33 @@ app.get('/login', (request, response) => {
 				console.log('Connection avec le serveur PostgreSQL réussi');
 			}
 		});
-
-		client.query("SELECT idUser FROM User WHERE username = '" + request.query.username + "' AND password='" + sha1(request.query.password) + "';")
+		var token;
+		client.query("SELECT iduser FROM Users WHERE username = '" + request.query.username + "' AND password='" + sha1(request.query.password) + "';")
 		.then((res) => {
-			console.log("azert");
 			if (res != null && res.rowCount == 1) {
-				//request.session.username = request.query.username;
-				//request.session.idUser = res.rows[0].id;
-				console.log("correct");
-				// TODO add a token for this user
-				var token = crypto.randomBytes(64).toString('hex');
-				client.query("INSERT INTO Token (token, idUser, dateCreation) VALUES (" + token + ", " + res[0]["idUser"] + ", NOW());")
-				response.json(token);
+				var idUser = res.rows[0].iduser;
+				client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
+				.then((res) => {
+					console.log(res);
+					var token = res.rows[0].token;
+					console.log("token: " + token);	
+					if (token == undefined || token == null) {
+						token = crypto.randomBytes(64).toString('hex');
+						client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+						.then((res) => {
+							//return token;
+						})
+						.catch((err) => {
+							console.log("erreur token");
+							console.log(err);
+						});
+					}
+					response.json(token);
+				})
+				.catch((err) => {
+					console.log("erreur token");
+					console.log(err);
+				});
 			}
 			else {
 				console.log("incorrect");
@@ -58,10 +153,10 @@ app.get('/login', (request, response) => {
 			}
 		})
 		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        response.json(false);
-      });
+			console.log("erreur lors de la connexion");
+			console.log(err);
+        		response.json(false);
+      		});
 	}
 	else {
 		console.log("erreur dans les paramètres");
@@ -71,7 +166,7 @@ app.get('/login', (request, response) => {
 
 
 
-app.post('/register', (request, response) => {
+app.get('/register', (request, response) => {
 	console.log(request.query);
 	if (request.query.username != null && request.query.password !=  null) {
 		client.connect(function(err, client, done) {
@@ -83,43 +178,75 @@ app.post('/register', (request, response) => {
 			}
 		});
 		// TODO faire une map
-		var user;
+		var user = new Object();
 		if (request.query.username != null) {
-			user.username= request.query.username;
+			user.username= "'" + request.query.username + "'";
 		}
 		if (request.query.name != null) {
-			user.name= request.query.name;
+			user.name= "'" + request.query.name + "'";
 		}
 		if (request.query.password != null) {
-			user.password= request.query.password;
+			user.password= "'" + sha1(request.query.password) + "'";
 		}
 		if (request.query.mail != null) {
-			user.mail= request.query.mail;
+			user.mail= "'" + request.query.mail + "'";
 		}
 		if (request.query.city != null) {
-			user.city= request.query.city;
+			user.city= "'" + request.query.city + "'";
 		}
 		if (request.query.birthdate != null) {
-			user.birthdate= request.query.birthdate;
+			user.birthdate= "'" + request.query.birthdate + "'";
 		}
 		if (request.query.mobile != null) {
-			user.mobile= request.query.mobile;
+			user.mobile= "'" + request.query.mobile + "'";
 		}
-		client.query("INSERT INTO User (" + Object.keys(user).toString() + ") VALUES (" + Object.entries(user).toString() + ")")
+		
+		var token;
+		client.query("INSERT INTO Users (" + Object.keys(user).toString() + ") VALUES (" + Object.values(user).toString() + ");")
 		.then((res) => {
-			//request.session.username = user.username;
-			//request.session.idUser = res.rows[0].id;
-			console.log("correct");
-			var token = crypto.randomBytes(64).toString('hex');
-			client.query("INSERT INTO Token (token, idUser, dateCreation) VALUES (" + token + ", " + res[0]["idUser"] + ", NOW());")
-			response.json(token);
+			client.query("SELECT idUser FROM Users WHERE username=" + user.username + ";")
+			.then((res) => {
+				console.log(res);
+				idUser = res.rows[0].iduser;
+				client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
+				.then((res) => {
+					console.log(res);
+					if (res.rowCount == 1) {
+						token = res.rows[0].token;
+					}
+					else {
+						token = crypto.randomBytes(64).toString('hex');
+						console.log("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());");
+						client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+						.then((res) => {
+							//return token;
+						})
+						.catch((err) => {
+							console.log("erreur token");
+							console.log(err);
+							response.json(false);
+						});
+					}
+					response.json(token);
+				})
+				.catch((err) => {
+					console.log("erreur token");
+					console.log(err);
+					response.json(false);
+				});
+			})
+			.catch((err) => {
+				console.log("erreur lors de la connexion");
+				console.log(err);
+        			response.json(false);
+      			});
 		})
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
 				console.log(err);
-        response.json(false);
-      });
-	}
+      		});
+      		console.log("sdfghjk");
+      	}
 	else {
 		console.log("erreur dans les paramètres");
 		response.json(false);
@@ -140,24 +267,27 @@ app.post('/user/change', (request, response) => {
 			}
 		});
 		// TODO faire une map
-		var user;
+		var user = new Object();
+		if (request.query.username != null) {
+			user.username= "'" + request.query.username + "'";
+		}
 		if (request.query.name != null) {
-			user.name= request.query.name;
+			user.name= "'" + request.query.name + "'";
 		}
 		if (request.query.password != null) {
-			user.password= request.query.password;
+			user.password= "'" + sha1(request.query.password) + "'";
 		}
 		if (request.query.mail != null) {
-			user.mail= request.query.mail;
+			user.mail= "'" + request.query.mail + "'";
 		}
 		if (request.query.city != null) {
-			user.city= request.query.city;
+			user.city= "'" + request.query.city + "'";
 		}
 		if (request.query.birthdate != null) {
-			user.birthdate= request.query.birthdate;
+			user.birthdate= "'" + request.query.birthdate + "'";
 		}
 		if (request.query.mobile != null) {
-			user.mobile= request.query.mobile;
+			user.mobile= "'" + request.query.mobile + "'";
 		}
 		let idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
@@ -352,7 +482,7 @@ app.get('/logout', (request, response) => {
  * 	Param: idEvent
  * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
  **/
-app.get('/event/:id', (request, response) => {
+app.get('/event/:idEvent', (request, response) => {
 	client.query("SELECT * FROM Event WHERE idEvent = '" + request.params.idEvent + "';")
 	.then((res) => {
 			console.log(res.rows[0]);
@@ -360,6 +490,26 @@ app.get('/event/:id', (request, response) => {
 		})
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
+				console.log(err);
+        response.json(false);
+      });
+});
+
+/**
+ * 	Inscrit un utilisateur à un evenement
+ * 	Requête /event/subscribe/:idEvent
+ * 	Param: idEvent, token
+ * 	Response: true ou false
+ **/
+app.get('/event/subscribe/:idEvent', (request, response) => {
+	client.query("SELECT * FROM Event WHERE idEvent = '" + request.params.idEvent + "';")
+	.then((res) => {
+			console.log(res.rows[0]);
+			response.json(res.rows[0]);
+		})
+		.catch((err) => {
+				console.log("erreur lors de la connexion");
+
 				console.log(err);
         response.json(false);
       });
