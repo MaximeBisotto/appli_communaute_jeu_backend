@@ -253,7 +253,7 @@ app.get('/register', (request, response) => {
 	}
 });
 
-app.post('/user/change', (request, response) => {
+app.get('/user/change', (request, response) => {
 	console.log(request.query);
 	if (request.query.username != null && request.query.token !=  null) {
 
@@ -289,25 +289,32 @@ app.post('/user/change', (request, response) => {
 		if (request.query.mobile != null) {
 			user.mobile= "'" + request.query.mobile + "'";
 		}
-		let idUser;
+		var idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
 		.then((res) => {
-			idUser = res[0][0];
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        			response.json(false);
-      		});
-      		
-		var updateQuery = "UPDATE User SET " + Object.keys(user)[0] + "='" + Object.entries(user)[0] + "'";
-		for (let i = 1; i < Object.keys(user).length; ++i) {
-			updateQuery += ", " + Object.keys(user)[i] + "='" + Object.entries(user)[i] + "'";
-		}
-		updateQuery += " WHERE idUser=" + idUser + ";";  // TODO remplacer la variable request.session.idUser pour ne pas utiliser de session
-		client.query(updateQuery)
-		.then((res) => {
-			console.log("update");
+			console.log(res);
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				var updateQuery = "UPDATE Users SET " + Object.keys(user)[0] + "=" + Object.values(user)[0] + "";
+				for (let i = 1; i < Object.keys(user).length; ++i) {
+					updateQuery += ", " + Object.keys(user)[i] + "=" + Object.values(user)[i] + "";
+				}
+				updateQuery += " WHERE idUser='" + idUser + "';";
+				console.log(updateQuery);
+				client.query(updateQuery)
+				.then((res) => {
+					console.log("update");
+					response.json(true);
+				})
+				.catch((err) => {
+					console.log("erreur lors de la connexion");
+					console.log(err);
+        				response.json(false);
+      				});
+			}
+			else {
+				response.json(false);
+			}
 		})
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
@@ -321,10 +328,10 @@ app.post('/user/change', (request, response) => {
 	}
 });
 
-app.post('/event/create', (request, response) => {
+app.get('/event/create', (request, response) => {
 	console.log(request.query);
 
-	if (request.query.username != null && request.query.password !=  null) {
+	if (request.query.eventLocation != null && request.query.startDate != null && request.query.startTime != null && request.query.duration != null && request.query.maxPlayer != null &&  request.query.token != null) {
 		client.connect(function(err, client, done) {
 			if(err) {
 				console.log('Erreur lors de la connection avec le serveur PostgreSQL : ' + err.stack);
@@ -334,33 +341,50 @@ app.post('/event/create', (request, response) => {
 			}
 		});
 		// TODO faire une map
-		var event;
+		var event = new Object();
 		if (request.query.mobile != null) {
-			event.mobile= request.query.mobile;
+			event.mobile= "'" + request.query.mobile + "'";
 		}
 		if (request.query.maxPlayer != null) {
-			event.maxPlayer= request.query.maxPlayer;
+			event.maxPlayer= "'" + request.query.maxPlayer + "'";
 		}
 		if (request.query.eventLocation != null) {
-			event.eventLocation= request.query.eventLocation;
+			event.eventLocation= "'" + request.query.eventLocation + "'";
 		}
 		if (request.query.startDate != null) {
-			event.startDate= request.query.startDate;
+			event.startDate= "'" + request.query.startDate + "'";
 		}
 		if (request.query.startTime != null) {
-			event.startTime= request.query.startTime;
+			event.startTime= "'" + request.query.startTime + "'";
 		}
 		if (request.query.duration != null) {
-			event.duration= request.query.duration;
+			event.duration= "'" + request.query.duration + "'";
 		}
 		if (request.query.lateMax != null) {
-			event.lateMax= request.query.lateMax;
+			event.lateMax= "'" + request.query.lateMax + "'";
 		}
 		
 		let idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
 		.then((res) => {
-			idUser = res[0][0];
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				event.idOrganisateur=idUser;
+      				
+      				console.log("INSERT INTO Event (" + Object.keys(event).toString() + ") VALUES (" + Object.values(event).toString() + ") RETURNING idEvent");
+				client.query("INSERT INTO Event (" + Object.keys(event).toString() + ") VALUES (" + Object.values(event).toString() + ") RETURNING idEvent")
+				.then((res) => {
+					response.json(res.rows[0].idevent);
+				})
+				.catch((err) => {
+					console.log("erreur lors de la connexion");
+					console.log(err);
+        				response.json(false);
+      				});
+			}
+			else {
+				response.json(false);
+			}
 		})
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
@@ -368,20 +392,7 @@ app.post('/event/create', (request, response) => {
         			response.json(false);
       		});
       		
-      		event.idOrganisateur=idUser;
       		
-		client.query("INSERT INTO Event (" + Object.keys(user).toString() + ") VALUES (" + Object.entries(user).toString() + ")")
-		.then((res) => {
-			//request.session.username = user.username;
-			//request.session.idUser = res.rows[0].id;
-			console.log("correct");
-			response.json(true);
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        response.json(false);
-      });
 	}
 
 	else {
@@ -391,7 +402,7 @@ app.post('/event/create', (request, response) => {
 
 });
 
-app.post('/event/update', (request, response) => {
+app.get('/event/update', (request, response) => {
 	console.log(request.query);
 	if (request.query.idEvent != null && request.query.token !=  null) {
 
@@ -406,53 +417,58 @@ app.post('/event/update', (request, response) => {
 		});
 		// TODO faire une map
 		
-		var event;
+		var event = new Object();
 		if (request.query.mobile != null) {
-			event.mobile= request.query.mobile;
+			event.mobile= "'" + request.query.mobile + "'";
 		}
 		if (request.query.maxPlayer != null) {
-			event.maxPlayer= request.query.maxPlayer;
+			event.maxPlayer= "'" + request.query.maxPlayer + "'";
 		}
 		if (request.query.eventLocation != null) {
-			event.eventLocation= request.query.eventLocation;
+			event.eventLocation= "'" + request.query.eventLocation + "'";
 		}
 		if (request.query.startDate != null) {
-			event.startDate= request.query.startDate;
+			event.startDate= "'" + request.query.startDate + "'";
 		}
 		if (request.query.startTime != null) {
-			event.startTime= request.query.startTime;
+			event.startTime= "'" + request.query.startTime + "'";
 		}
 		if (request.query.duration != null) {
-			event.duration= request.query.duration;
+			event.duration= "'" + request.query.duration + "'";
 		}
 		if (request.query.lateMax != null) {
-			event.lateMax= request.query.lateMax;
+			event.lateMax= "'" + request.query.lateMax + "'";
 		}
 		
 		let idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
 		.then((res) => {
-			idUser = res[0][0];
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				var updateQuery = "UPDATE Event SET " + Object.keys(event)[0] + "=" + Object.values(event)[0];
+				for (let i = 1; i < Object.keys(event).length; ++i) {
+					updateQuery += ", " + Object.keys(event)[i] + "=" + Object.values(event)[i];
+				}
+				updateQuery += " WHERE idOrganisateur=" + idUser + " AND idEvent=" + request.query.idEvent + ";";
+				client.query(updateQuery)
+				.then((res) => {
+					console.log("update");
+					response.json(true);
+				})
+				.catch((err) => {
+						console.log("erreur lors de la connexion");
+						console.log(err);
+						response.json(false);
+
+		      		});
+					}
 		})
 		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        			response.json(false);
-      		});
-		var updateQuery = "UPDATE Event SET " + Object.keys(user)[0] + "='" + Object.entries(user)[0] + "'";
-		for (let i = 1; i < Object.keys(user).length; ++i) {
-			updateQuery += ", " + Object.keys(user)[i] + "='" + Object.entries(user)[i] + "'";
-		}
-		updateQuery += " WHERE idUser=" + idUser + " AND idEvent=" + request.query.idEvent + ";";
-		client.query(updateQuery)
-		.then((res) => {
-			console.log("update");
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        			response.json(false);
-      		});
+			console.log("erreur lors de la connexion");
+			console.log(err);
+			response.json(false);
+		});
+		
 	}
 	else {
 		console.log("erreur dans les paramètres");
@@ -463,16 +479,27 @@ app.post('/event/update', (request, response) => {
 /**
  *
  *	Requête /logout
- *	Param: none
+ *	Param: token
  *	Response: redirection
  **/
 app.get('/logout', (request, response) => {
-	// TODO delete the token
-	client.query("DELETE Token WHERE idUser = " + request.session.idUser + ";");
-	/*request.session.destroy(function(err) {
-  		// cannot access session here
-	});*/
-	response.redirect('/');
+	if (request.query.token == undefined) {
+		response.json(false);
+	}
+	else {
+		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
+		.then((res) => {
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				client.query("DELETE Token WHERE idUser = " + request.session.idUser + ";");
+				response.json(true);
+			}
+			else {
+				response.json(false);
+			}
+		response.redirect('/');
+		});
+	}
 	
 });
 
@@ -510,6 +537,45 @@ app.get('/event/subscribe/:idEvent', (request, response) => {
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
 
+				console.log(err);
+        response.json(false);
+      });
+});
+
+/**
+ * 	Retourne la liste des jeux
+ * 	Requête /game/
+ * 	Param: aucun
+ * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ **/
+app.get('/game', (request, response) => {
+	client.query("SELECT * FROM Game;")
+	.then((res) => {
+			console.log(res.rows);
+			response.json(res.rows);
+		})
+		.catch((err) => {
+				console.log("erreur lors de la connexion");
+				console.log(err);
+        response.json(false);
+      });
+});
+
+/**
+ * 	Retourne les informations à propos d'un jeu
+ * 	Requête /game/:idGame
+ * 	Param: idGame
+
+ * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ **/
+app.get('/game/:idGame', (request, response) => {
+	client.query("SELECT * FROM Game WHERE idEvent = '" + request.params.idEvent + "';")
+	.then((res) => {
+			console.log(res.rows[0]);
+			response.json(res.rows[0]);
+		})
+		.catch((err) => {
+				console.log("erreur lors de la connexion");
 				console.log(err);
         response.json(false);
       });
