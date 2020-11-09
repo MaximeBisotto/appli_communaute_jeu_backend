@@ -1,0 +1,1 @@
+INSERT INTO public.gamesupport (idsupport, name) VALUES (1, 'reflexion');

@@ -1,0 +1,2 @@
+INSERT INTO public.event (idevent, idorganisateur, mobile, maxplayer, eventlocation, startdate, starttime, duration, latemax) VALUES (2, 1, null, 15, 'avignon', '2030-10-12', '12:15:00', 240, null);
+INSERT INTO public.event (idevent, idorganisateur, mobile, maxplayer, eventlocation, startdate, starttime, duration, latemax) VALUES (3, 1, null, 5, 'marseille', '2030-10-12', '12:15:00', 240, null);

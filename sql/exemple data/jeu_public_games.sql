@@ -1,0 +1,1 @@
+INSERT INTO public.games (idgame, idtype, idsupport, name, coast, descriptive, minplayer, maxplayer, minold, picturefilename) VALUES (2, 1, 1, 'uno', 10, 'jeu de carte assez connu', 2, 7, 7, '/rien/du/tout');

@@ -1,0 +1,8 @@
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (22, 'maxF', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (23, 'maxZ', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (25, 'maxY', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (26, 'maxABC', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (28, 'maxABCD', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (29, 'maxABCDE', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (30, 'maxABCDEF', null, '0706025b2bbcec1ed8d64822f4eccd96314938d0', null, null, null, null);
+INSERT INTO public.users (iduser, username, name, password, mail, city, birthdate, mobile) VALUES (1, 'max', 'max', '0706025b2bbcec1ed8d64822f4eccd96314938d0', 'bisotto', null, null, '''0600000000''');

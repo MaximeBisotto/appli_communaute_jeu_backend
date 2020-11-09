@@ -1,0 +1,11 @@
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('4e49442951de9d9568cc9ffd03c7bae4094cf9ecef0e033ff2514eadf74cfaf0e3b05e5bf22be5b89fc463d905c21b332bc6f2c8ffc24fe84862db0c7e11d25b', 1, '2020-11-07');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('23463e653faf01f4e968d5df529db0b11dbc18fea92f518bfb984e03d93da44b0a77d242e2ff40fd0dab07b2d0409526e5e858018a04fb8772ad229318723331', 12, '2020-11-07');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('e4ddf29ccecf6fbd572c77568cdbaf37086c4af2378ac4ba1f4b12771b60fc992fa6d7388356d721813dde7f1f84aa74c85406f4408dd275db33bd0e9f14c077', 14, '2020-11-07');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('dda5b9c19c8713b0e96e2ede2e2501c4ba83df615effbc2b152f150b82ea839cb7360e642279304e69372526ca573cdfd20ca90ee6dc5e1a12d0a5a136d5fb33', 16, '2020-11-07');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('35e1684d622d6c0b77af657bb3b5d9fcb3263c08c6407c0ed5d4e2c91a59ab50dcfd23e09e40566d04eb2fe36c86c7f0a3142aeadd9aa50900afc05e41955917', 18, '2020-11-07');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('b216d7816cef6f445c07e1a4c7d0fb01df199ba14a705a5f356c8a411f13c89710b3b45a5f9d1be6e69ebcfda55762357a4bced4141006f0ff839fe10f896f45', 19, '2020-11-07');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('d7230c6b497f44e9105b7d7e25f6ad903c9931ec4880a83b04bfcf24bbda62da4ed2e46139dade7a8af703bba61f8194031610542e6573a92531a22fcfff2b46', 25, '2020-11-08');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('3d4e44dc5680a4933979be79c1a178f98ea47512a02d4553588c94f49a078027c13f6b44bc74eff702efb250906cfdbe112ec42a34dcd00c19ee9c4bbe5faa80', 26, '2020-11-08');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('60cd22e25db80ded1b1c719c25b36e0c7909d14e57ec16f6db18c7948ce32725f8bdc6fa066b518997be3532d488f6d8605374046b3aab1e56d22a4acc5f4532', 28, '2020-11-08');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('85da077460fb5dcb34b37e30b02cae58d7a0042c66ffd02fae5c31795d85d37bb9289ce0aa2ea1ba7b584bd65df63d45962f36ecebf0cac4abc6fb433fb67d43', 29, '2020-11-08');
+INSERT INTO public.token (token, iduser, datecreation) VALUES ('27c54080fc801ce9ef86ea77d48086882509376bc1a496f45aa5c141c3f89dea89366c5071c826cc183ea21d277c7058800e4a663786ec357cdac7239a047ed8', 30, '2020-11-08');

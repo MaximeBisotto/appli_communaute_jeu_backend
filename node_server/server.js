@@ -529,17 +529,53 @@ app.get('/event/:idEvent', (request, response) => {
  * 	Response: true ou false
  **/
 app.get('/event/subscribe/:idEvent', (request, response) => {
-	client.query("SELECT * FROM Event WHERE idEvent = '" + request.params.idEvent + "';")
-	.then((res) => {
-			console.log(res.rows[0]);
-			response.json(res.rows[0]);
+	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
+		.then((res) => {
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				client.query("INSERT INTO participation (idUser,idEvent) INTO (" + idUser + "," + idEvent + ");")
+				.then((res) => {
+					response.json(true);
+				})
+				.catch((res) => {
+					console.log(err);
+					response.json(false);
+				})
 		})
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
-
+				response.json(false);
 				console.log(err);
-        response.json(false);
       });
+      response.json(false);
+});
+
+/**
+ * 	Désinscrit un utilisateur à un evenement
+ * 	Requête /event/unsubscribe/:idEvent
+ * 	Param: idEvent, token
+ * 	Response: true ou false
+ **/
+app.get('/event/unsubscribe/:idEvent', (request, response) => {
+	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
+		.then((res) => {
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + idEvent + "';")
+				.then((res) => {
+					response.json(true);
+				})
+				.catch((res) => {
+					console.log(err);
+					response.json(false);
+				})
+		})
+		.catch((err) => {
+				console.log("erreur lors de la connexion");
+				response.json(false);
+				console.log(err);
+      });
+      response.json(false);
 });
 
 /**
@@ -549,7 +585,7 @@ app.get('/event/subscribe/:idEvent', (request, response) => {
  * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
  **/
 app.get('/game', (request, response) => {
-	client.query("SELECT * FROM Game;")
+	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype;")
 	.then((res) => {
 			console.log(res.rows);
 			response.json(res.rows);
@@ -569,7 +605,7 @@ app.get('/game', (request, response) => {
  * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
  **/
 app.get('/game/:idGame', (request, response) => {
-	client.query("SELECT * FROM Game WHERE idEvent = '" + request.params.idEvent + "';")
+	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE idGame = '" + request.params.idGame + "';")
 	.then((res) => {
 			console.log(res.rows[0]);
 			response.json(res.rows[0]);
@@ -579,6 +615,44 @@ app.get('/game/:idGame', (request, response) => {
 				console.log(err);
         response.json(false);
       });
+});
+
+/**
+ * 	Retourne la liste des support de jeux
+ * 	Requête /game/
+ * 	Param: aucun
+ * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ **/
+app.get('/game/listSupport', (request, response) => {
+	client.query("SELECT name FROM gamesupport;")
+	.then((res) => {
+		console.log(res.rows);
+		response.json(res.rows);
+	})
+	.catch((err) => {
+		console.log("erreur lors de la connexion");
+		console.log(err);
+        	response.json(false);
+      	});
+});
+
+/**
+ * 	Retourne la liste des types de jeux
+ * 	Requête /game/
+ * 	Param: aucun
+ * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ **/
+app.get('/game/listType', (request, response) => {
+	client.query("SELECT name FROM gametype;")
+	.then((res) => {
+		console.log(res.rows);
+		response.json(res.rows);
+	})
+	.catch((err) => {
+			console.log("erreur lors de la connexion");
+			console.log(err);
+       			response.json(false);
+	});
 });
 
 var server = app.listen(3018, () => {
