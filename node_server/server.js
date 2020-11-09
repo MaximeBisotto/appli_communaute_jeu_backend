@@ -505,7 +505,7 @@ app.get('/logout', (request, response) => {
 
 /**
  * 	Retourne les informations à propos d'un événement
- * 	Requête /event/:idEvent
+ * 	Requête /event/info/:idEvent
  * 	Param: idEvent
  * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
  **/
@@ -529,25 +529,27 @@ app.get('/event/:idEvent', (request, response) => {
  * 	Response: true ou false
  **/
 app.get('/event/subscribe/:idEvent', (request, response) => {
-	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-		.then((res) => {
-			if (res.rowCount == 1) {
-				idUser = res.rows[0].iduser;
-				client.query("INSERT INTO participation (idUser,idEvent) INTO (" + idUser + "," + idEvent + ");")
-				.then((res) => {
-					response.json(true);
-				})
-				.catch((res) => {
-					console.log(err);
-					response.json(false);
-				})
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				response.json(false);
+	console.log(request.query);
+	console.log("SELECT idUser FROM Token WHERE token='" + request.query.token + "';");
+	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "';")
+	.then((res) => {
+		if (res.rowCount == 1) {
+			idUser = res.rows[0].iduser;
+			client.query("INSERT INTO participation (idUser,idEvent) VALUES (" + idUser + "," + request.params.idEvent + ");")
+			.then((res) => {
+				response.json(true);
+			})
+			.catch((err) => {
 				console.log(err);
-      });
-      response.json(false);
+				response.json(false);
+			});
+		}
+	})
+	.catch((err) => {
+		console.log("erreur lors de la connexion");
+		response.json(false);
+		console.log(err);
+      	});
 });
 
 /**
@@ -561,7 +563,7 @@ app.get('/event/unsubscribe/:idEvent', (request, response) => {
 		.then((res) => {
 			if (res.rowCount == 1) {
 				idUser = res.rows[0].iduser;
-				client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + idEvent + "';")
+				client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + request.params.idEvent + "';")
 				.then((res) => {
 					response.json(true);
 				})
@@ -569,13 +571,13 @@ app.get('/event/unsubscribe/:idEvent', (request, response) => {
 					console.log(err);
 					response.json(false);
 				})
+			}
 		})
 		.catch((err) => {
 				console.log("erreur lors de la connexion");
 				response.json(false);
 				console.log(err);
       });
-      response.json(false);
 });
 
 /**
@@ -591,10 +593,10 @@ app.get('/game', (request, response) => {
 			response.json(res.rows);
 		})
 		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        response.json(false);
-      });
+			console.log("erreur lors de la connexion");
+			console.log(err);
+        		response.json(false);
+	      	});
 });
 
 /**
@@ -604,17 +606,18 @@ app.get('/game', (request, response) => {
 
  * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
  **/
-app.get('/game/:idGame', (request, response) => {
+app.get('/game/info/:idGame', (request, response) => {
+	console.log("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE idGame = '" + request.params.idGame + "';");
 	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE idGame = '" + request.params.idGame + "';")
 	.then((res) => {
-			console.log(res.rows[0]);
-			response.json(res.rows[0]);
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        response.json(false);
-      });
+		console.log(res.rows[0]);
+		response.json(res.rows[0]);
+	})
+	.catch((err) => {
+		console.log("erreur lors de la connexion");
+		console.log(err);
+        	response.json(false);
+      	});
 });
 
 /**
