@@ -2,105 +2,11 @@ const express = require('express');
 const app = express();
 const Client = require('pg');
 const sha1 = require('sha1');
-//const session = require('express-session');
 const crypto = require('crypto');
 
 var config_bdd = require('./config_bdd.json')
 
 const client = new Client.Pool(config_bdd);
-/*const client = new Client.Pool({
-	user: 'postgres',
-	host: '172.17.0.1',
-	// host: 'localhost',
-	database: 'jeu',
-	password: 'mdp',
-	port: 5432,
-});*/
-
-
-/*app.use(session({// charge le middleware express-session dans la pile
- 	secret: 'ma phrase secrete',
- 	saveUninitialized: false, // Session créée uniquement à la première sauvegarde de données
- 	resave: false, // pas de session sauvegardée si pas de modif
-	store : express.session.MemoryStore,
-	cookie : {maxAge : 24 * 3600 * 1000}
-}));*/
-
-function getIdUser(token) {
-	let idUser;
-	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-	.then((res) => {
-		idUser = res[0][0];
-	})
-	.catch((err) => {
-		// TODO throws a error
-		console.log("erreur lors de la connexion");
-		console.log(err);
-		idUser=null;
-      	});
-      	return idUser;	
-}
-
-/*function insertNewToken(idUser) {
-	var token;
-	client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
-	.then((res) => {
-		console.log(res);
-		var token = res.rows[0].token;
-		console.log("token: " + token);	
-		if (token == undefined || token == null) {
-			token = crypto.randomBytes(64).toString('hex');
-			console.log("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());");
-			client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
-			.then((res) => {
-				//return token;
-			})
-			.catch((err) => {
-				console.log("erreur token");
-				console.log(err);
-			});
-		}
-		//response.json(token);
-		console.log("fin fonction: " + token);
-		return token;
-	})
-	.catch((err) => {
-		console.log("erreur token");
-		console.log(err);
-	});
-	
-	//response.json(token);
-	//return token;
-	//return token;
-
-
-
-	var token = crypto.randomBytes(64).toString('hex');
-	console.log("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());");
-	client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
-	.then((res) => {
-		console.log("fghjkjhgfgh");
-		return token;
-	})
-	.catch((err) => {
-		// TODO il faudrait ignorer l'exception qui est tout à fait normale si l'utilisateur est déjà inscrit
-		client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
-		.then((res) => {
-			console.log("success");
-			return res.rows[0].token;
-		})
-		.catch((err) => {
-			console.log("erreur token");
-			console.log(err);
-		});
-		if (err.code != '23505') {
-			console.log("error insert token bdd");
-			console.log(err);
-		}
-	});
-	//return token;
-}*/
-
 
 /**
  *	Requête GET /login 
@@ -109,7 +15,6 @@ function getIdUser(token) {
  *	Response: token (len: 64) or false if the connection failed
  **/
 app.get('/login', (request, response) => {
-	console.log(request.query);
 	if (request.query.username != null && request.query.password !=  null) {
 		client.connect(function(err, client, done) {
 			if(err) {
@@ -126,14 +31,12 @@ app.get('/login', (request, response) => {
 				var idUser = res.rows[0].iduser;
 				client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
 				.then((res) => {
-					console.log(res);
 					var token = res.rows[0].token;
-					console.log("token: " + token);	
 					if (token == undefined || token == null) {
 						token = crypto.randomBytes(64).toString('hex');
 						client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
 						.then((res) => {
-							//return token;
+							
 						})
 						.catch((err) => {
 							console.log("erreur token");
@@ -148,12 +51,10 @@ app.get('/login', (request, response) => {
 				});
 			}
 			else {
-				console.log("incorrect");
 				response.json(false);
 			}
 		})
 		.catch((err) => {
-			console.log("erreur lors de la connexion");
 			console.log(err);
         		response.json(false);
       		});
@@ -165,9 +66,13 @@ app.get('/login', (request, response) => {
 });
 
 
-
+/**
+ * 	Permet d'inscrire un utilisateur
+ * 	Requête /register
+ * 	Param: username, password, autre élément sur l'utilisateur 
+ * 	Response: token
+ **/
 app.get('/register', (request, response) => {
-	console.log(request.query);
 	if (request.query.username != null && request.query.password !=  null) {
 		client.connect(function(err, client, done) {
 			if(err) {
@@ -206,17 +111,14 @@ app.get('/register', (request, response) => {
 		.then((res) => {
 			client.query("SELECT idUser FROM Users WHERE username=" + user.username + ";")
 			.then((res) => {
-				console.log(res);
 				idUser = res.rows[0].iduser;
 				client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
 				.then((res) => {
-					console.log(res);
 					if (res.rowCount == 1) {
 						token = res.rows[0].token;
 					}
 					else {
 						token = crypto.randomBytes(64).toString('hex');
-						console.log("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());");
 						client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
 						.then((res) => {
 							//return token;
@@ -236,16 +138,13 @@ app.get('/register', (request, response) => {
 				});
 			})
 			.catch((err) => {
-				console.log("erreur lors de la connexion");
 				console.log(err);
         			response.json(false);
       			});
 		})
 		.catch((err) => {
-				console.log("erreur lors de la connexion");
 				console.log(err);
       		});
-      		console.log("sdfghjk");
       	}
 	else {
 		console.log("erreur dans les paramètres");
@@ -253,8 +152,14 @@ app.get('/register', (request, response) => {
 	}
 });
 
+
+/**
+ * 	Permet de mettre à jour son profil utilisateur
+ * 	Requête /user/change
+ * 	Param: token, username, autre élément sur l'utilisateur 
+ * 	Response: boolean
+ **/
 app.get('/user/change', (request, response) => {
-	console.log(request.query);
 	if (request.query.username != null && request.query.token !=  null) {
 
 		client.connect(function(err, client, done) {
@@ -292,7 +197,6 @@ app.get('/user/change', (request, response) => {
 		var idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
 		.then((res) => {
-			console.log(res);
 			if (res.rowCount == 1) {
 				idUser = res.rows[0].iduser;
 				var updateQuery = "UPDATE Users SET " + Object.keys(user)[0] + "=" + Object.values(user)[0] + "";
@@ -300,14 +204,11 @@ app.get('/user/change', (request, response) => {
 					updateQuery += ", " + Object.keys(user)[i] + "=" + Object.values(user)[i] + "";
 				}
 				updateQuery += " WHERE idUser='" + idUser + "';";
-				console.log(updateQuery);
 				client.query(updateQuery)
 				.then((res) => {
-					console.log("update");
 					response.json(true);
 				})
 				.catch((err) => {
-					console.log("erreur lors de la connexion");
 					console.log(err);
         				response.json(false);
       				});
@@ -317,7 +218,6 @@ app.get('/user/change', (request, response) => {
 			}
 		})
 		.catch((err) => {
-				console.log("erreur lors de la connexion");
 				console.log(err);
         			response.json(false);
       		});
@@ -328,8 +228,14 @@ app.get('/user/change', (request, response) => {
 	}
 });
 
+
+/**
+ * 	Permet de creer un évènement
+ * 	Requête /event/create
+ * 	Param: token, eventLocation, startDate, startTime, duration, maxPlayer, autre élément sur l'évènement 
+ * 	Response: boolean
+ **/
 app.get('/event/create', (request, response) => {
-	console.log(request.query);
 
 	if (request.query.eventLocation != null && request.query.startDate != null && request.query.startTime != null && request.query.duration != null && request.query.maxPlayer != null &&  request.query.token != null) {
 		client.connect(function(err, client, done) {
@@ -340,7 +246,7 @@ app.get('/event/create', (request, response) => {
 				console.log('Connection avec le serveur PostgreSQL réussi');
 			}
 		});
-		// TODO faire une map
+		
 		var event = new Object();
 		if (request.query.mobile != null) {
 			event.mobile= "'" + request.query.mobile + "'";
@@ -371,13 +277,11 @@ app.get('/event/create', (request, response) => {
 				idUser = res.rows[0].iduser;
 				event.idOrganisateur=idUser;
       				
-      				console.log("INSERT INTO Event (" + Object.keys(event).toString() + ") VALUES (" + Object.values(event).toString() + ") RETURNING idEvent");
 				client.query("INSERT INTO Event (" + Object.keys(event).toString() + ") VALUES (" + Object.values(event).toString() + ") RETURNING idEvent")
 				.then((res) => {
 					response.json(res.rows[0].idevent);
 				})
 				.catch((err) => {
-					console.log("erreur lors de la connexion");
 					console.log(err);
         				response.json(false);
       				});
@@ -387,7 +291,6 @@ app.get('/event/create', (request, response) => {
 			}
 		})
 		.catch((err) => {
-				console.log("erreur lors de la connexion");
 				console.log(err);
         			response.json(false);
       		});
@@ -402,8 +305,14 @@ app.get('/event/create', (request, response) => {
 
 });
 
+
+/**
+ * 	Permet de mettre à jour un évènement
+ * 	Requête /event/info/:idEvent
+ * 	Param: idEvent, token, élément à mettre à jour
+ * 	Response: boolean
+ **/
 app.get('/event/update', (request, response) => {
-	console.log(request.query);
 	if (request.query.idEvent != null && request.query.token !=  null) {
 
 		client.connect(function(err, client, done) {
@@ -415,7 +324,6 @@ app.get('/event/update', (request, response) => {
 				console.log('Connection avec le serveur PostgreSQL réussi');
 			}
 		});
-		// TODO faire une map
 		
 		var event = new Object();
 		if (request.query.mobile != null) {
@@ -452,19 +360,15 @@ app.get('/event/update', (request, response) => {
 				updateQuery += " WHERE idOrganisateur=" + idUser + " AND idEvent=" + request.query.idEvent + ";";
 				client.query(updateQuery)
 				.then((res) => {
-					console.log("update");
 					response.json(true);
 				})
 				.catch((err) => {
-						console.log("erreur lors de la connexion");
-						console.log(err);
-						response.json(false);
-
+					console.log(err);
+					response.json(false);
 		      		});
-					}
+			}
 		})
 		.catch((err) => {
-			console.log("erreur lors de la connexion");
 			console.log(err);
 			response.json(false);
 		});
@@ -504,22 +408,37 @@ app.get('/logout', (request, response) => {
 });
 
 /**
+ * 	Retourne les informations à propos de tout les évènements
+ * 	Requête /event/info/:idEvent
+ * 	Param: idEvent
+ * 	Response: l'id de l'event son organisateur, un mobile à contacter, un nombre maximum de joueur, un lieu, une date et heure de début, la durée et le retard maximum autorisé
+ **/
+app.get('/event/', (request, response) => {
+	client.query("SELECT * FROM Event;")
+	.then((res) => {
+		response.json(res.rows);
+	})
+	.catch((err) => {
+		console.log(err);
+        	response.json(false);
+      	});
+});
+
+/**
  * 	Retourne les informations à propos d'un événement
  * 	Requête /event/info/:idEvent
  * 	Param: idEvent
- * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ * 	Response: l'id de l'event son organisateur, un mobile à contacter, un nombre maximum de joueur, un lieu, une date et heure de début, la durée et le retard maximum autorisé
  **/
 app.get('/event/:idEvent', (request, response) => {
 	client.query("SELECT * FROM Event WHERE idEvent = '" + request.params.idEvent + "';")
 	.then((res) => {
-			console.log(res.rows[0]);
-			response.json(res.rows[0]);
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				console.log(err);
-        response.json(false);
-      });
+		response.json(res.rows[0]);
+	})
+	.catch((err) => {
+		console.log(err);
+        	response.json(false);
+      	});
 });
 
 /**
@@ -529,8 +448,6 @@ app.get('/event/:idEvent', (request, response) => {
  * 	Response: true ou false
  **/
 app.get('/event/subscribe/:idEvent', (request, response) => {
-	console.log(request.query);
-	console.log("SELECT idUser FROM Token WHERE token='" + request.query.token + "';");
 	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "';")
 	.then((res) => {
 		if (res.rowCount == 1) {
@@ -546,7 +463,6 @@ app.get('/event/subscribe/:idEvent', (request, response) => {
 		}
 	})
 	.catch((err) => {
-		console.log("erreur lors de la connexion");
 		response.json(false);
 		console.log(err);
       	});
@@ -560,40 +476,37 @@ app.get('/event/subscribe/:idEvent', (request, response) => {
  **/
 app.get('/event/unsubscribe/:idEvent', (request, response) => {
 	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-		.then((res) => {
-			if (res.rowCount == 1) {
-				idUser = res.rows[0].iduser;
-				client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + request.params.idEvent + "';")
-				.then((res) => {
-					response.json(true);
-				})
-				.catch((res) => {
-					console.log(err);
-					response.json(false);
-				})
-			}
-		})
-		.catch((err) => {
-				console.log("erreur lors de la connexion");
-				response.json(false);
+	.then((res) => {
+		if (res.rowCount == 1) {
+			idUser = res.rows[0].iduser;
+			client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + request.params.idEvent + "';")
+			.then((res) => {
+				response.json(true);
+			})
+			.catch((res) => {
 				console.log(err);
-      });
+				response.json(false);
+			})
+		}
+	})
+	.catch((err) => {
+		response.json(false);
+		console.log(err);
+      	});
 });
 
 /**
  * 	Retourne la liste des jeux
- * 	Requête /game/
+ * 	Requête /game
  * 	Param: aucun
- * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ * 	Response: pour chaque jeu, cela retourne l'id du jeu, son nom, son coût, sa description, le minimum et le maximum de joueur qui peut jouer, l'age minimum, le chemin vers une image, le support et le type
  **/
 app.get('/game', (request, response) => {
 	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype;")
 	.then((res) => {
-			console.log(res.rows);
 			response.json(res.rows);
 		})
 		.catch((err) => {
-			console.log("erreur lors de la connexion");
 			console.log(err);
         		response.json(false);
 	      	});
@@ -601,20 +514,17 @@ app.get('/game', (request, response) => {
 
 /**
  * 	Retourne les informations à propos d'un jeu
- * 	Requête /game/:idGame
+ * 	Requête /game/info/:idGame
  * 	Param: idGame
 
- * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ * 	Response: l'id du jeu, son nom, son coût, sa description, le minimum et le maximum de joueur qui peut jouer, l'age minimum, le chemin vers une image, le support et le type
  **/
 app.get('/game/info/:idGame', (request, response) => {
-	console.log("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE idGame = '" + request.params.idGame + "';");
 	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE idGame = '" + request.params.idGame + "';")
 	.then((res) => {
-		console.log(res.rows[0]);
 		response.json(res.rows[0]);
 	})
 	.catch((err) => {
-		console.log("erreur lors de la connexion");
 		console.log(err);
         	response.json(false);
       	});
@@ -622,18 +532,16 @@ app.get('/game/info/:idGame', (request, response) => {
 
 /**
  * 	Retourne la liste des support de jeux
- * 	Requête /game/
+ * 	Requête /game/listSupport
  * 	Param: aucun
- * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ * 	Response: Une liste contenant les différents types de jeux
  **/
 app.get('/game/listSupport', (request, response) => {
 	client.query("SELECT name FROM gamesupport;")
 	.then((res) => {
-		console.log(res.rows);
 		response.json(res.rows);
 	})
 	.catch((err) => {
-		console.log("erreur lors de la connexion");
 		console.log(err);
         	response.json(false);
       	});
@@ -641,20 +549,18 @@ app.get('/game/listSupport', (request, response) => {
 
 /**
  * 	Retourne la liste des types de jeux
- * 	Requête /game/
+ * 	Requête /game/listType
  * 	Param: aucun
- * 	Response: Every column in that table TODO définir clairement quand la base sera fixé
+ * 	Response: Une liste contenant les différents types de jeux
  **/
 app.get('/game/listType', (request, response) => {
 	client.query("SELECT name FROM gametype;")
 	.then((res) => {
-		console.log(res.rows);
 		response.json(res.rows);
 	})
 	.catch((err) => {
-			console.log("erreur lors de la connexion");
-			console.log(err);
-       			response.json(false);
+		console.log(err);
+       		response.json(false);
 	});
 });
 
