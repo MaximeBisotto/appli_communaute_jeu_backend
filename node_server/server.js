@@ -414,7 +414,7 @@ app.get('/logout', (request, response) => {
  * 	Response: l'id de l'event son organisateur, un mobile à contacter, un nombre maximum de joueur, un lieu, une date et heure de début, la durée et le retard maximum autorisé
  **/
 app.get('/event/', (request, response) => {
-	client.query("SELECT * FROM Event;")
+	client.query("SELECT idevent, idorganisateur, event.mobile, maxplayer, eventlocation, startdate, starttime, duration, latemax, username FROM Event LEFT OUTER JOIN users on users.iduser = event.idorganisateur;")
 	.then((res) => {
 		response.json(res.rows);
 	})
@@ -431,7 +431,7 @@ app.get('/event/', (request, response) => {
  * 	Response: l'id de l'event son organisateur, un mobile à contacter, un nombre maximum de joueur, un lieu, une date et heure de début, la durée et le retard maximum autorisé
  **/
 app.get('/event/:idEvent', (request, response) => {
-	client.query("SELECT * FROM Event WHERE idEvent = '" + request.params.idEvent + "';")
+	client.query("SELECT idevent, idorganisateur, event.mobile, maxplayer, eventlocation, startdate, starttime, duration, latemax, username FROM Event LEFT OUTER JOIN users on users.iduser = event.idorganisateur WHERE idEvent = '" + request.params.idEvent + "';")
 	.then((res) => {
 		response.json(res.rows[0]);
 	})
