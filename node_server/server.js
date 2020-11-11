@@ -3,10 +3,13 @@ const app = express();
 const Client = require('pg');
 const sha1 = require('sha1');
 const crypto = require('crypto');
+const bp = require("body-parser");
 
 var config_bdd = require('./config_bdd.json')
 
 const client = new Client.Pool(config_bdd);
+
+app.use(bp.urlencoded({ extended: true }));
 
 /**
  *	Requête GET /login 
@@ -14,8 +17,9 @@ const client = new Client.Pool(config_bdd);
  *	Param: username et password
  *	Response: token (len: 64) or false if the connection failed
  **/
-app.get('/login', (request, response) => {
-	if (request.query.username != null && request.query.password !=  null) {
+app.post('/login', (request, response) => {
+	console.log(request.body);
+	if (request.body.username != null && request.body.password !=  null) {
 		client.connect(function(err, client, done) {
 			if(err) {
 				console.log('Erreur lors de la connection avec le serveur PostgreSQL : ' + err.stack);
@@ -25,7 +29,7 @@ app.get('/login', (request, response) => {
 			}
 		});
 		var token;
-		client.query("SELECT iduser FROM Users WHERE username = '" + request.query.username + "' AND password='" + sha1(request.query.password) + "';")
+		client.query("SELECT iduser FROM Users WHERE username = '" + request.body.username + "' AND password='" + sha1(request.body.password) + "';")
 		.then((res) => {
 			if (res != null && res.rowCount == 1) {
 				var idUser = res.rows[0].iduser;
@@ -72,8 +76,8 @@ app.get('/login', (request, response) => {
  * 	Param: username, password, autre élément sur l'utilisateur 
  * 	Response: token
  **/
-app.get('/register', (request, response) => {
-	if (request.query.username != null && request.query.password !=  null) {
+app.post('/register', (request, response) => {
+	if (request.body.username != null && request.body.password !=  null) {
 		client.connect(function(err, client, done) {
 			if(err) {
 				console.log('Erreur lors de la connection avec le serveur PostgreSQL : ' + err.stack);
@@ -84,26 +88,26 @@ app.get('/register', (request, response) => {
 		});
 		// TODO faire une map
 		var user = new Object();
-		if (request.query.username != null) {
-			user.username= "'" + request.query.username + "'";
+		if (request.body.username != null) {
+			user.username= "'" + request.body.username + "'";
 		}
-		if (request.query.name != null) {
-			user.name= "'" + request.query.name + "'";
+		if (request.body.name != null) {
+			user.name= "'" + request.body.name + "'";
 		}
-		if (request.query.password != null) {
-			user.password= "'" + sha1(request.query.password) + "'";
+		if (request.body.password != null) {
+			user.password= "'" + sha1(request.body.password) + "'";
 		}
-		if (request.query.mail != null) {
-			user.mail= "'" + request.query.mail + "'";
+		if (request.body.mail != null) {
+			user.mail= "'" + request.body.mail + "'";
 		}
-		if (request.query.city != null) {
-			user.city= "'" + request.query.city + "'";
+		if (request.body.city != null) {
+			user.city= "'" + request.body.city + "'";
 		}
-		if (request.query.birthdate != null) {
-			user.birthdate= "'" + request.query.birthdate + "'";
+		if (request.body.birthdate != null) {
+			user.birthdate= "'" + request.body.birthdate + "'";
 		}
-		if (request.query.mobile != null) {
-			user.mobile= "'" + request.query.mobile + "'";
+		if (request.body.mobile != null) {
+			user.mobile= "'" + request.body.mobile + "'";
 		}
 		
 		var token;
