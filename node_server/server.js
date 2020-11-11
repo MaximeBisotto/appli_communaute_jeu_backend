@@ -239,9 +239,9 @@ app.get('/user/change', (request, response) => {
  * 	Param: token, eventLocation, startDate, startTime, duration, maxPlayer, autre élément sur l'évènement 
  * 	Response: boolean
  **/
-app.get('/event/create', (request, response) => {
+app.post('/event/create', (request, response) => {
 
-	if (request.query.eventLocation != null && request.query.startDate != null && request.query.startTime != null && request.query.duration != null && request.query.maxPlayer != null &&  request.query.token != null) {
+	if (request.body.eventLocation != null && request.body.startDate != null && request.body.startTime != null && request.body.duration != null && request.body.maxPlayer != null &&  request.body.token != null) {
 		client.connect(function(err, client, done) {
 			if(err) {
 				console.log('Erreur lors de la connection avec le serveur PostgreSQL : ' + err.stack);
@@ -252,30 +252,30 @@ app.get('/event/create', (request, response) => {
 		});
 		
 		var event = new Object();
-		if (request.query.mobile != null) {
-			event.mobile= "'" + request.query.mobile + "'";
+		if (request.body.mobile != null) {
+			event.mobile= "'" + request.body.mobile + "'";
 		}
-		if (request.query.maxPlayer != null) {
-			event.maxPlayer= "'" + request.query.maxPlayer + "'";
+		if (request.body.maxPlayer != null) {
+			event.maxPlayer= "'" + request.body.maxPlayer + "'";
 		}
-		if (request.query.eventLocation != null) {
-			event.eventLocation= "'" + request.query.eventLocation + "'";
+		if (request.body.eventLocation != null) {
+			event.eventLocation= "'" + request.body.eventLocation + "'";
 		}
-		if (request.query.startDate != null) {
-			event.startDate= "'" + request.query.startDate + "'";
+		if (request.body.startDate != null) {
+			event.startDate= "'" + request.body.startDate + "'";
 		}
-		if (request.query.startTime != null) {
-			event.startTime= "'" + request.query.startTime + "'";
+		if (request.body.startTime != null) {
+			event.startTime= "'" + request.body.startTime + "'";
 		}
-		if (request.query.duration != null) {
-			event.duration= "'" + request.query.duration + "'";
+		if (request.body.duration != null) {
+			event.duration= "'" + request.body.duration + "'";
 		}
-		if (request.query.lateMax != null) {
-			event.lateMax= "'" + request.query.lateMax + "'";
+		if (request.body.lateMax != null) {
+			event.lateMax= "'" + request.body.lateMax + "'";
 		}
 		
 		let idUser;
-		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
+		client.query("SELECT idUser FROM Token WHERE token='" + request.body.token + "'")
 		.then((res) => {
 			if (res.rowCount == 1) {
 				idUser = res.rows[0].iduser;
@@ -506,7 +506,7 @@ app.get('/event/unsubscribe/:idEvent', (request, response) => {
  * 	Response: pour chaque jeu, cela retourne l'id du jeu, son nom, son coût, sa description, le minimum et le maximum de joueur qui peut jouer, l'age minimum, le chemin vers une image, le support et le type
  **/
 app.get('/game', (request, response) => {
-	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype;")
+	client.query("SELECT idgame, games.name as name, coast as cost, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name as support, gametype.name as type FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype;")
 	.then((res) => {
 			response.json(res.rows);
 		})
