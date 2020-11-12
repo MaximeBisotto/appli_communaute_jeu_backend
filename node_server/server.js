@@ -12,8 +12,8 @@ const client = new Client.Pool(config_bdd);
 app.use(bp.urlencoded({ extended: true }));
 
 /**
- *	Requête GET /login 
- *	
+ *	Requête GET /login
+ *
  *	Param: username et password
  *	Response: token (len: 64) or false if the connection failed
  **/
@@ -30,38 +30,38 @@ app.post('/login', (request, response) => {
 		});
 		var token;
 		client.query("SELECT iduser FROM Users WHERE username = '" + request.body.username + "' AND password='" + sha1(request.body.password) + "';")
-		.then((res) => {
-			if (res != null && res.rowCount == 1) {
-				var idUser = res.rows[0].iduser;
-				client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
-				.then((res) => {
-					var token = res.rows[0].token;
-					if (token == undefined || token == null) {
-						token = crypto.randomBytes(64).toString('hex');
-						client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+			.then((res) => {
+				if (res != null && res.rowCount == 1) {
+					var idUser = res.rows[0].iduser;
+					client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
 						.then((res) => {
-							
+							var token = res.rows[0].token;
+							if (token == undefined || token == null) {
+								token = crypto.randomBytes(64).toString('hex');
+								client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+									.then((res) => {
+
+									})
+									.catch((err) => {
+										console.log("erreur token");
+										console.log(err);
+									});
+							}
+							response.json(token);
 						})
 						.catch((err) => {
 							console.log("erreur token");
 							console.log(err);
 						});
-					}
-					response.json(token);
-				})
-				.catch((err) => {
-					console.log("erreur token");
-					console.log(err);
-				});
-			}
-			else {
+				}
+				else {
+					response.json(false);
+				}
+			})
+			.catch((err) => {
+				console.log(err);
 				response.json(false);
-			}
-		})
-		.catch((err) => {
-			console.log(err);
-        		response.json(false);
-      		});
+			});
 	}
 	else {
 		console.log("erreur dans les paramètres");
@@ -73,7 +73,7 @@ app.post('/login', (request, response) => {
 /**
  * 	Permet d'inscrire un utilisateur
  * 	Requête /register
- * 	Param: username, password, autre élément sur l'utilisateur 
+ * 	Param: username, password, autre élément sur l'utilisateur
  * 	Response: token
  **/
 app.post('/register', (request, response) => {
@@ -109,47 +109,47 @@ app.post('/register', (request, response) => {
 		if (request.body.mobile != null) {
 			user.mobile= "'" + request.body.mobile + "'";
 		}
-		
+
 		var token;
 		client.query("INSERT INTO Users (" + Object.keys(user).toString() + ") VALUES (" + Object.values(user).toString() + ");")
-		.then((res) => {
-			client.query("SELECT idUser FROM Users WHERE username=" + user.username + ";")
 			.then((res) => {
-				idUser = res.rows[0].iduser;
-				client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
-				.then((res) => {
-					if (res.rowCount == 1) {
-						token = res.rows[0].token;
-					}
-					else {
-						token = crypto.randomBytes(64).toString('hex');
-						client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
-						.then((res) => {
-							//return token;
-						})
-						.catch((err) => {
-							console.log("erreur token");
-							console.log(err);
-							response.json(false);
-						});
-					}
-					response.json(token);
-				})
-				.catch((err) => {
-					console.log("erreur token");
-					console.log(err);
-					response.json(false);
-				});
+				client.query("SELECT idUser FROM Users WHERE username=" + user.username + ";")
+					.then((res) => {
+						idUser = res.rows[0].iduser;
+						client.query("SELECT token FROM Token WHERE iduser=" + idUser + ";")
+							.then((res) => {
+								if (res.rowCount == 1) {
+									token = res.rows[0].token;
+								}
+								else {
+									token = crypto.randomBytes(64).toString('hex');
+									client.query("INSERT INTO Token (Token, idUser, dateCreation) VALUES ('" + token + "', '" + idUser + "', NOW());")
+										.then((res) => {
+											//return token;
+										})
+										.catch((err) => {
+											console.log("erreur token");
+											console.log(err);
+											response.json(false);
+										});
+								}
+								response.json(token);
+							})
+							.catch((err) => {
+								console.log("erreur token");
+								console.log(err);
+								response.json(false);
+							});
+					})
+					.catch((err) => {
+						console.log(err);
+						response.json(false);
+					});
 			})
 			.catch((err) => {
 				console.log(err);
-        			response.json(false);
-      			});
-		})
-		.catch((err) => {
-				console.log(err);
-      		});
-      	}
+			});
+	}
 	else {
 		console.log("erreur dans les paramètres");
 		response.json(false);
@@ -160,7 +160,7 @@ app.post('/register', (request, response) => {
 /**
  * 	Permet de mettre à jour son profil utilisateur
  * 	Requête /user/change
- * 	Param: token, username, autre élément sur l'utilisateur 
+ * 	Param: token, username, autre élément sur l'utilisateur
  * 	Response: boolean
  **/
 app.get('/user/change', (request, response) => {
@@ -200,31 +200,31 @@ app.get('/user/change', (request, response) => {
 		}
 		var idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-		.then((res) => {
-			if (res.rowCount == 1) {
-				idUser = res.rows[0].iduser;
-				var updateQuery = "UPDATE Users SET " + Object.keys(user)[0] + "=" + Object.values(user)[0] + "";
-				for (let i = 1; i < Object.keys(user).length; ++i) {
-					updateQuery += ", " + Object.keys(user)[i] + "=" + Object.values(user)[i] + "";
+			.then((res) => {
+				if (res.rowCount == 1) {
+					idUser = res.rows[0].iduser;
+					var updateQuery = "UPDATE Users SET " + Object.keys(user)[0] + "=" + Object.values(user)[0] + "";
+					for (let i = 1; i < Object.keys(user).length; ++i) {
+						updateQuery += ", " + Object.keys(user)[i] + "=" + Object.values(user)[i] + "";
+					}
+					updateQuery += " WHERE idUser='" + idUser + "';";
+					client.query(updateQuery)
+						.then((res) => {
+							response.json(true);
+						})
+						.catch((err) => {
+							console.log(err);
+							response.json(false);
+						});
 				}
-				updateQuery += " WHERE idUser='" + idUser + "';";
-				client.query(updateQuery)
-				.then((res) => {
-					response.json(true);
-				})
-				.catch((err) => {
-					console.log(err);
-        				response.json(false);
-      				});
-			}
-			else {
-				response.json(false);
-			}
-		})
-		.catch((err) => {
+				else {
+					response.json(false);
+				}
+			})
+			.catch((err) => {
 				console.log(err);
-        			response.json(false);
-      		});
+				response.json(false);
+			});
 	}
 	else {
 		console.log("erreur dans les paramètres");
@@ -236,7 +236,7 @@ app.get('/user/change', (request, response) => {
 /**
  * 	Permet de creer un évènement
  * 	Requête /event/create
- * 	Param: token, eventLocation, startDate, startTime, duration, maxPlayer, autre élément sur l'évènement 
+ * 	Param: token, eventLocation, startDate, startTime, duration, maxPlayer, autre élément sur l'évènement
  * 	Response: boolean
  **/
 app.post('/event/create', (request, response) => {
@@ -250,7 +250,7 @@ app.post('/event/create', (request, response) => {
 				console.log('Connection avec le serveur PostgreSQL réussi');
 			}
 		});
-		
+
 		var event = new Object();
 		if (request.body.mobile != null) {
 			event.mobile= "'" + request.body.mobile + "'";
@@ -273,33 +273,33 @@ app.post('/event/create', (request, response) => {
 		if (request.body.lateMax != null) {
 			event.lateMax= "'" + request.body.lateMax + "'";
 		}
-		
+
 		let idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.body.token + "'")
-		.then((res) => {
-			if (res.rowCount == 1) {
-				idUser = res.rows[0].iduser;
-				event.idOrganisateur=idUser;
-      				
-				client.query("INSERT INTO Event (" + Object.keys(event).toString() + ") VALUES (" + Object.values(event).toString() + ") RETURNING idEvent")
-				.then((res) => {
-					response.json(res.rows[0].idevent);
-				})
-				.catch((err) => {
-					console.log(err);
-        				response.json(false);
-      				});
-			}
-			else {
-				response.json(false);
-			}
-		})
-		.catch((err) => {
+			.then((res) => {
+				if (res.rowCount == 1) {
+					idUser = res.rows[0].iduser;
+					event.idOrganisateur=idUser;
+
+					client.query("INSERT INTO Event (" + Object.keys(event).toString() + ") VALUES (" + Object.values(event).toString() + ") RETURNING idEvent")
+						.then((res) => {
+							response.json(res.rows[0].idevent);
+						})
+						.catch((err) => {
+							console.log(err);
+							response.json(false);
+						});
+				}
+				else {
+					response.json(false);
+				}
+			})
+			.catch((err) => {
 				console.log(err);
-        			response.json(false);
-      		});
-      		
-      		
+				response.json(false);
+			});
+
+
 	}
 
 	else {
@@ -328,7 +328,7 @@ app.get('/event/update', (request, response) => {
 				console.log('Connection avec le serveur PostgreSQL réussi');
 			}
 		});
-		
+
 		var event = new Object();
 		if (request.query.mobile != null) {
 			event.mobile= "'" + request.query.mobile + "'";
@@ -351,32 +351,32 @@ app.get('/event/update', (request, response) => {
 		if (request.query.lateMax != null) {
 			event.lateMax= "'" + request.query.lateMax + "'";
 		}
-		
+
 		let idUser;
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-		.then((res) => {
-			if (res.rowCount == 1) {
-				idUser = res.rows[0].iduser;
-				var updateQuery = "UPDATE Event SET " + Object.keys(event)[0] + "=" + Object.values(event)[0];
-				for (let i = 1; i < Object.keys(event).length; ++i) {
-					updateQuery += ", " + Object.keys(event)[i] + "=" + Object.values(event)[i];
+			.then((res) => {
+				if (res.rowCount == 1) {
+					idUser = res.rows[0].iduser;
+					var updateQuery = "UPDATE Event SET " + Object.keys(event)[0] + "=" + Object.values(event)[0];
+					for (let i = 1; i < Object.keys(event).length; ++i) {
+						updateQuery += ", " + Object.keys(event)[i] + "=" + Object.values(event)[i];
+					}
+					updateQuery += " WHERE idOrganisateur=" + idUser + " AND idEvent=" + request.query.idEvent + ";";
+					client.query(updateQuery)
+						.then((res) => {
+							response.json(true);
+						})
+						.catch((err) => {
+							console.log(err);
+							response.json(false);
+						});
 				}
-				updateQuery += " WHERE idOrganisateur=" + idUser + " AND idEvent=" + request.query.idEvent + ";";
-				client.query(updateQuery)
-				.then((res) => {
-					response.json(true);
-				})
-				.catch((err) => {
-					console.log(err);
-					response.json(false);
-		      		});
-			}
-		})
-		.catch((err) => {
-			console.log(err);
-			response.json(false);
-		});
-		
+			})
+			.catch((err) => {
+				console.log(err);
+				response.json(false);
+			});
+
 	}
 	else {
 		console.log("erreur dans les paramètres");
@@ -396,19 +396,19 @@ app.get('/logout', (request, response) => {
 	}
 	else {
 		client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-		.then((res) => {
-			if (res.rowCount == 1) {
-				idUser = res.rows[0].iduser;
-				client.query("DELETE Token WHERE idUser = " + request.session.idUser + ";");
-				response.json(true);
-			}
-			else {
-				response.json(false);
-			}
-		response.redirect('/');
-		});
+			.then((res) => {
+				if (res.rowCount == 1) {
+					idUser = res.rows[0].iduser;
+					client.query("DELETE Token WHERE idUser = " + request.session.idUser + ";");
+					response.json(true);
+				}
+				else {
+					response.json(false);
+				}
+				response.redirect('/');
+			});
 	}
-	
+
 });
 
 /**
@@ -419,13 +419,13 @@ app.get('/logout', (request, response) => {
  **/
 app.get('/event/', (request, response) => {
 	client.query("SELECT idevent, idorganisateur, event.mobile, maxplayer, eventlocation, startdate, starttime, duration, latemax, username FROM Event LEFT OUTER JOIN users on users.iduser = event.idorganisateur;")
-	.then((res) => {
-		response.json(res.rows);
-	})
-	.catch((err) => {
-		console.log(err);
-        	response.json(false);
-      	});
+		.then((res) => {
+			response.json(res.rows);
+		})
+		.catch((err) => {
+			console.log(err);
+			response.json(false);
+		});
 });
 
 /**
@@ -436,13 +436,13 @@ app.get('/event/', (request, response) => {
  **/
 app.get('/event/:idEvent', (request, response) => {
 	client.query("SELECT idevent, idorganisateur, event.mobile, maxplayer, eventlocation, startdate, starttime, duration, latemax, username FROM Event LEFT OUTER JOIN users on users.iduser = event.idorganisateur WHERE idEvent = '" + request.params.idEvent + "';")
-	.then((res) => {
-		response.json(res.rows[0]);
-	})
-	.catch((err) => {
-		console.log(err);
-        	response.json(false);
-      	});
+		.then((res) => {
+			response.json(res.rows[0]);
+		})
+		.catch((err) => {
+			console.log(err);
+			response.json(false);
+		});
 });
 
 /**
@@ -453,23 +453,23 @@ app.get('/event/:idEvent', (request, response) => {
  **/
 app.get('/event/subscribe/:idEvent', (request, response) => {
 	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "';")
-	.then((res) => {
-		if (res.rowCount == 1) {
-			idUser = res.rows[0].iduser;
-			client.query("INSERT INTO participation (idUser,idEvent) VALUES (" + idUser + "," + request.params.idEvent + ");")
-			.then((res) => {
-				response.json(true);
-			})
-			.catch((err) => {
-				console.log(err);
-				response.json(false);
-			});
-		}
-	})
-	.catch((err) => {
-		response.json(false);
-		console.log(err);
-      	});
+		.then((res) => {
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				client.query("INSERT INTO participation (idUser,idEvent) VALUES (" + idUser + "," + request.params.idEvent + ");")
+					.then((res) => {
+						response.json(true);
+					})
+					.catch((err) => {
+						console.log(err);
+						response.json(false);
+					});
+			}
+		})
+		.catch((err) => {
+			response.json(false);
+			console.log(err);
+		});
 });
 
 /**
@@ -480,23 +480,23 @@ app.get('/event/subscribe/:idEvent', (request, response) => {
  **/
 app.get('/event/unsubscribe/:idEvent', (request, response) => {
 	client.query("SELECT idUser FROM Token WHERE token='" + request.query.token + "'")
-	.then((res) => {
-		if (res.rowCount == 1) {
-			idUser = res.rows[0].iduser;
-			client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + request.params.idEvent + "';")
-			.then((res) => {
-				response.json(true);
-			})
-			.catch((res) => {
-				console.log(err);
-				response.json(false);
-			})
-		}
-	})
-	.catch((err) => {
-		response.json(false);
-		console.log(err);
-      	});
+		.then((res) => {
+			if (res.rowCount == 1) {
+				idUser = res.rows[0].iduser;
+				client.query("DELETE FROM participation WHERE idUser='" + idUser + "' AND idEvent='" + request.params.idEvent + "';")
+					.then((res) => {
+						response.json(true);
+					})
+					.catch((res) => {
+						console.log(err);
+						response.json(false);
+					})
+			}
+		})
+		.catch((err) => {
+			response.json(false);
+			console.log(err);
+		});
 });
 
 /**
@@ -507,13 +507,13 @@ app.get('/event/unsubscribe/:idEvent', (request, response) => {
  **/
 app.get('/game', (request, response) => {
 	client.query("SELECT idgame, games.name as name, coast as cost, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name as support, gametype.name as type FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype;")
-	.then((res) => {
+		.then((res) => {
 			response.json(res.rows);
 		})
 		.catch((err) => {
 			console.log(err);
-        		response.json(false);
-	      	});
+			response.json(false);
+		});
 });
 
 /**
@@ -525,13 +525,13 @@ app.get('/game', (request, response) => {
  **/
 app.get('/game/info/:idGame', (request, response) => {
 	client.query("SELECT idgame, games.name, coast, descriptive, minplayer, maxplayer, minold, picturefilename, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE idGame = '" + request.params.idGame + "';")
-	.then((res) => {
-		response.json(res.rows[0]);
-	})
-	.catch((err) => {
-		console.log(err);
-        	response.json(false);
-      	});
+		.then((res) => {
+			response.json(res.rows[0]);
+		})
+		.catch((err) => {
+			console.log(err);
+			response.json(false);
+		});
 });
 
 /**
@@ -542,13 +542,13 @@ app.get('/game/info/:idGame', (request, response) => {
  **/
 app.get('/game/listSupport', (request, response) => {
 	client.query("SELECT name FROM gamesupport;")
-	.then((res) => {
-		response.json(res.rows);
-	})
-	.catch((err) => {
-		console.log(err);
-        	response.json(false);
-      	});
+		.then((res) => {
+			response.json(res.rows);
+		})
+		.catch((err) => {
+			console.log(err);
+			response.json(false);
+		});
 });
 
 /**
@@ -559,13 +559,30 @@ app.get('/game/listSupport', (request, response) => {
  **/
 app.get('/game/listType', (request, response) => {
 	client.query("SELECT name FROM gametype;")
-	.then((res) => {
-		response.json(res.rows);
-	})
-	.catch((err) => {
-		console.log(err);
-       		response.json(false);
-	});
+		.then((res) => {
+			response.json(res.rows);
+		})
+		.catch((err) => {
+			console.log(err);
+			response.json(false);
+		});
+});
+
+/**
+ *  Retourne la liste des jeux contenant dans leur nom le parametre
+ *  Requete /game/info
+ *  Param : nom d'un jeu à trouver
+ *  Response : Une liste contenant les différents jeux
+ **/
+app.get('/game/info/:gameName', (request, response) => {
+	client.query("SELECT games.name, coast, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE games.name LIKE '%\" + request.params.idGame + \"%';")
+		.then((res) => {
+			response.json(res.rows);
+		})
+		.catch((err) => {
+			console.log(err);
+			response.json(false);
+		});
 });
 
 var server = app.listen(3018, () => {
