@@ -574,8 +574,8 @@ app.get('/game/listType', (request, response) => {
  *  Param : nom d'un jeu à trouver
  *  Response : Une liste contenant les différents jeux
  **/
-app.get('/game/info/:gameName', (request, response) => {
-	client.query("SELECT games.name, coast, gamesupport.name, gametype.name FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE games.name LIKE '%\" + request.params.idGame + \"%';")
+app.get('/game/info', (request, response) => {
+	client.query("SELECT games.name, coast as cost, gamesupport.name as support, gametype.name as type FROM games LEFT JOIN gamesupport ON games.idsupport = gamesupport.idsupport LEFT JOIN gametype on gametype.idtype = games.idtype WHERE games.name LIKE '%" + request.query.gameName + "%';")
 		.then((res) => {
 			response.json(res.rows);
 		})
